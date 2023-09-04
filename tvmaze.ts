@@ -5,7 +5,9 @@ const $ = jQuery;
 
 const $showsList = $("#showsList");
 const $episodesArea = $("#episodesArea");
+const $episodesList = $("#episodesList")
 const $searchForm = $("#searchForm");
+
 
 const BASE_URL: string = "https://api.tvmaze.com/search/shows";
 const MISSING_IMAGE_URL: string = "https://tinyurl.com/tv-missing";
@@ -25,6 +27,23 @@ interface showResultInterface {
     image: { medium: string; } | null;
   };
 }
+
+interface episodeInterface {
+  id: number,
+  name: string,
+  season: string,
+  number:string
+}
+
+
+interface episodeResultInterface {
+  episode:{
+    id: number,
+    name: string,
+    season: number,
+    number:number
+ }
+}
 /** Given a search term, search for tv shows that match that query.
  *
  *  Returns (promise) array of show objects: [show, show, ...].
@@ -37,7 +56,7 @@ async function searchShowsByTerm(term: string): Promise<showInterface[]> {
   const response = await axios.get(BASE_URL, {
     params: { q: term }
   });
-  console.log("responses=", response);
+  console.log("in searchShowsByTerm response=", response);
   const data: showResultInterface[] = response.data;
 
   const results = data.map(result => ({
@@ -103,8 +122,36 @@ $searchForm.on("submit", async function (evt) {
  *      { id, name, season, number }
  */
 
-// async function getEpisodesOfShow(id) { }
+async function getEpisodesOfShow(id:number):Promise<episodeInterface[]> {
 
-/** Write a clear docstring for this function... */
+  const response = await axios.get(BASE_URL+`/${id}/episodes`);
+  console.log("in getEpisodesOfShow response=", response);
 
-// function populateEpisodes(episodes) { }
+  const data: episodeResultInterface[] = response.data;
+
+  const results = data.map(({episode}) => ({
+    id: episode.id,
+    name: episode.name,
+    season: episode.season.toString(),
+    number:episode.number.toString()
+
+  }))
+
+  return results
+
+ }
+
+/** Given list of episodes, create markup for each and to DOM */
+
+function populateEpisodes(episodes:episodeInterface[]) {
+
+  $episodesList.empty();
+  $episodesArea.css('display','block')
+
+  for(let episode of episodes){
+    const $episode = $(`
+      <li>${episode.name} (season ${episode.season}, number ${episode.number})</li>
+    `)
+    $episodesList.append($episode);
+  }
+}

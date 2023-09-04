@@ -12588,6 +12588,7 @@ var jquery_1 = __importDefault(__webpack_require__(/*! jquery */ "./node_modules
 var $ = jquery_1.default;
 var $showsList = $("#showsList");
 var $episodesArea = $("#episodesArea");
+var $episodesList = $("#episodesList");
 var $searchForm = $("#searchForm");
 var BASE_URL = "https://api.tvmaze.com/search/shows";
 var MISSING_IMAGE_URL = "https://tinyurl.com/tv-missing";
@@ -12607,7 +12608,7 @@ function searchShowsByTerm(term) {
                     })];
                 case 1:
                     response = _a.sent();
-                    console.log("responses=", response);
+                    console.log("in searchShowsByTerm response=", response);
                     data = response.data;
                     results = data.map(function (result) {
                         var _a;
@@ -12669,9 +12670,40 @@ $searchForm.on("submit", function (evt) {
 /** Given a show ID, get from API and return (promise) array of episodes:
  *      { id, name, season, number }
  */
-// async function getEpisodesOfShow(id) { }
-/** Write a clear docstring for this function... */
-// function populateEpisodes(episodes) { }
+function getEpisodesOfShow(id) {
+    return __awaiter(this, void 0, void 0, function () {
+        var response, data, results;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, axios_1.default.get(BASE_URL + "/".concat(id, "/episodes"))];
+                case 1:
+                    response = _a.sent();
+                    console.log("in getEpisodesOfShow response=", response);
+                    data = response.data;
+                    results = data.map(function (_a) {
+                        var episode = _a.episode;
+                        return ({
+                            id: episode.id,
+                            name: episode.name,
+                            season: episode.season.toString(),
+                            number: episode.number.toString()
+                        });
+                    });
+                    return [2 /*return*/, results];
+            }
+        });
+    });
+}
+/** Given list of episodes, create markup for each and to DOM */
+function populateEpisodes(episodes) {
+    $episodesList.empty();
+    $episodesArea.css('display', 'block');
+    for (var _i = 0, episodes_1 = episodes; _i < episodes_1.length; _i++) {
+        var episode = episodes_1[_i];
+        var $episode = $("\n      <li>".concat(episode.name, " (season ").concat(episode.season, ", number ").concat(episode.number, ")</li>\n    "));
+        $episodesList.append($episode);
+    }
+}
 
 
 /***/ })
