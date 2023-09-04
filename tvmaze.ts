@@ -7,7 +7,24 @@ const $showsList = $("#showsList");
 const $episodesArea = $("#episodesArea");
 const $searchForm = $("#searchForm");
 
+const BASE_URL: string = "https://api.tvmaze.com/search/shows";
+const MISSING_IMAGE_URL: string = "https://tinyurl.com/tv-missing";
 
+interface showInterface {
+  id: number;
+  name: string;
+  summary: string;
+  image: string;
+}
+
+interface showResultInterface {
+  show: {
+    id: number;
+    name: string;
+    summary: string;
+    image: { medium: string; } | null;
+  };
+}
 /** Given a search term, search for tv shows that match that query.
  *
  *  Returns (promise) array of show objects: [show, show, ...].
@@ -15,40 +32,37 @@ const $searchForm = $("#searchForm");
  *    (if no image URL given by API, put in a default image URL)
  */
 
-async function searchShowsByTerm(term) {
+async function searchShowsByTerm(term: string): Promise<showInterface[]> {
   // ADD: Remove placeholder & make request to TVMaze search shows API.
-  return [
-    {
-      id: 1767,
-      name: "The Bletchley Circle",
-      summary:
-        `<p><b>The Bletchley Circle</b> follows the journey of four ordinary
-           women with extraordinary skills that helped to end World War II.</p>
-         <p>Set in 1952, Susan, Millie, Lucy and Jean have returned to their
-           normal lives, modestly setting aside the part they played in
-           producing crucial intelligence, which helped the Allies to victory
-           and shortened the war. When Susan discovers a hidden code behind an
-           unsolved murder she is met by skepticism from the police. She
-           quickly realises she can only begin to crack the murders and bring
-           the culprit to justice with her former friends.</p>`,
-      image:
-          "http://static.tvmaze.com/uploads/images/medium_portrait/147/369403.jpg"
-    }
-  ]
+  const response = await axios.get(BASE_URL, {
+    params: { q: term }
+  });
+  console.log("responses=", response);
+  const data: showResultInterface[] = response.data;
+
+  const results = data.map(result => ({
+    id: result.show.id,
+    name: result.show.name,
+    summary: result.show.summary,
+    image: result.show.image?.medium || MISSING_IMAGE_URL
+  }));
+
+
+  return results;
 }
 
 
 /** Given list of shows, create markup for each and to DOM */
 
-function populateShows(shows) {
+function populateShows(shows:showInterface[]) {
   $showsList.empty();
 
   for (let show of shows) {
     const $show = $(
-        `<div data-show-id="${show.id}" class="Show col-md-12 col-lg-6 mb-4">
+      `<div data-show-id="${show.id}" class="Show col-md-12 col-lg-6 mb-4">
          <div class="media">
            <img
-              src="http://static.tvmaze.com/uploads/images/medium_portrait/160/401704.jpg"
+              src="${show.image}"
               alt="Bletchly Circle San Francisco"
               class="w-25 me-3">
            <div class="media-body">
@@ -62,7 +76,8 @@ function populateShows(shows) {
        </div>
       `);
 
-    $showsList.append($show);  }
+    $showsList.append($show);
+  }
 }
 
 
