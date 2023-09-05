@@ -12590,7 +12590,7 @@ var $showsList = $("#showsList");
 var $episodesArea = $("#episodesArea");
 var $episodesList = $("#episodesList");
 var $searchForm = $("#searchForm");
-var BASE_URL = "https://api.tvmaze.com/search/shows";
+var BASE_URL = "https://api.tvmaze.com/";
 var MISSING_IMAGE_URL = "https://tinyurl.com/tv-missing";
 /** Given a search term, search for tv shows that match that query.
  *
@@ -12603,7 +12603,7 @@ function searchShowsByTerm(term) {
         var response, data, results;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, axios_1.default.get(BASE_URL, {
+                case 0: return [4 /*yield*/, axios_1.default.get("".concat(BASE_URL, "search/shows"), {
                         params: { q: term }
                     })];
                 case 1:
@@ -12629,7 +12629,7 @@ function populateShows(shows) {
     $showsList.empty();
     for (var _i = 0, shows_1 = shows; _i < shows_1.length; _i++) {
         var show = shows_1[_i];
-        var $show = $("<div data-show-id=\"".concat(show.id, "\" class=\"Show col-md-12 col-lg-6 mb-4\">\n         <div class=\"media\">\n           <img\n              src=\"").concat(show.image, "\"\n              alt=\"Bletchly Circle San Francisco\"\n              class=\"w-25 me-3\">\n           <div class=\"media-body\">\n             <h5 class=\"text-primary\">").concat(show.name, "</h5>\n             <div><small>").concat(show.summary, "</small></div>\n             <button class=\"btn btn-outline-light btn-sm Show-getEpisodes\">\n               Episodes\n             </button>\n           </div>\n         </div>\n       </div>\n      "));
+        var $show = $("<div data-show-id=\"".concat(show.id, "\" class=\"Show col-md-12 col-lg-6 mb-4\">\n         <div class=\"media\">\n           <img\n              src=\"").concat(show.image, "\"\n              alt=\"").concat(show.name, "\"\n              class=\"w-25 me-3\">\n           <div class=\"media-body\">\n             <h5 class=\"text-primary\">").concat(show.name, "</h5>\n             <div><small>").concat(show.summary, "</small></div>\n             <button class=\"btn btn-outline-light btn-sm Show-getEpisodes\">\n               Episodes\n             </button>\n           </div>\n         </div>\n       </div>\n      "));
         $showsList.append($show);
     }
 }
@@ -12675,20 +12675,18 @@ function getEpisodesOfShow(id) {
         var response, data, results;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, axios_1.default.get(BASE_URL + "/".concat(id, "/episodes"))];
+                case 0: return [4 /*yield*/, axios_1.default.get("".concat(BASE_URL, "shows/").concat(id, "/episodes"))];
                 case 1:
                     response = _a.sent();
                     console.log("in getEpisodesOfShow response=", response);
                     data = response.data;
-                    results = data.map(function (_a) {
-                        var episode = _a.episode;
-                        return ({
-                            id: episode.id,
-                            name: episode.name,
-                            season: episode.season.toString(),
-                            number: episode.number.toString()
-                        });
-                    });
+                    console.log("episodes data=", data);
+                    results = data.map(function (episode) { return ({
+                        id: episode.id,
+                        name: episode.name,
+                        season: episode.season.toString(),
+                        number: episode.number.toString()
+                    }); });
                     return [2 /*return*/, results];
             }
         });
@@ -12697,13 +12695,47 @@ function getEpisodesOfShow(id) {
 /** Given list of episodes, create markup for each and to DOM */
 function populateEpisodes(episodes) {
     $episodesList.empty();
-    $episodesArea.css('display', 'block');
+    $episodesArea.show();
     for (var _i = 0, episodes_1 = episodes; _i < episodes_1.length; _i++) {
         var episode = episodes_1[_i];
-        var $episode = $("\n      <li>".concat(episode.name, " (season ").concat(episode.season, ", number ").concat(episode.number, ")</li>\n    "));
+        var $episode = $("\n      <li>\n      ".concat(episode.name, " (season ").concat(episode.season, ", number ").concat(episode.number, ")\n      </li>\n    "));
         $episodesList.append($episode);
     }
 }
+/** Handle click on episodes button and display the list of
+ * episodes for the show
+ */
+function searchForEpisodesAndDisplay(id) {
+    return __awaiter(this, void 0, void 0, function () {
+        var episodes;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, getEpisodesOfShow(id)];
+                case 1:
+                    episodes = _a.sent();
+                    populateEpisodes(episodes);
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+$showsList.on("click", ".Show-getEpisodes", function (evt) {
+    return __awaiter(this, void 0, void 0, function () {
+        var $btn, id;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    $btn = $(evt.target);
+                    id = $btn.closest(".Show").data("showId");
+                    console.log("id=", id);
+                    return [4 /*yield*/, searchForEpisodesAndDisplay(id)];
+                case 1:
+                    _a.sent();
+                    return [2 /*return*/];
+            }
+        });
+    });
+});
 
 
 /***/ })
